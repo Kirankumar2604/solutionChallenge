@@ -66,6 +66,7 @@ Required:
 - `DATABASE_URL`: Postgres connection string (required by `lib/db` and DB tooling)
 - `PORT`: required by API server and Vite config
 - `BASE_PATH`: required by Vite (`/` is a safe default for local dev)
+- `VITE_API_BASE_URL`: optional frontend API origin for hosted deployments (for example your Render API URL)
 
 Example:
 
@@ -73,6 +74,7 @@ Example:
 export DATABASE_URL="postgres://user:password@localhost:5432/fairlens"
 export PORT=4000
 export BASE_PATH="/"
+export VITE_API_BASE_URL="https://your-render-api.onrender.com"
 ```
 
 ## Setup
@@ -114,6 +116,7 @@ Notes:
 
 - The generated client calls `/api/...` routes.
 - In hosted/reverse-proxied environments, this usually works out of the box.
+- For Vercel deployments, set `VITE_API_BASE_URL` to your Render API origin so `/api` calls target the backend instead of the static host.
 - For custom local networking setups, route frontend `/api` requests to the API server origin.
 
 ## Useful Commands

@@ -1,6 +1,6 @@
 {
   "framework": "vite",
-  "installCommand": "pnpm install",
+  "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm --filter @workspace/fairlens run build",
-  "outputDirectory": "artifacts/fairlens/dist"
+  "outputDirectory": "artifacts/fairlens/dist/public"
 }

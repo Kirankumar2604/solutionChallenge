@@ -1,18 +1,49 @@
-# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+# Dependencies
+node_modules/
 
-# compiled output
-dist
-tmp
-out-tsc
+# Build outputs
+dist/
+build/
+out/
+out-tsc/
+tmp/
+temp/
 *.tsbuildinfo
-.expo
-.expo-shared
 
-# dependencies
-node_modules
+# Test/coverage outputs
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+testem.log
+libpeerconnection.log
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Tooling caches
+.cache/
+.sass-cache/
+.turbo/
+.eslintcache
+.vite/
+
+# Package manager lockfiles not used in this repo (pnpm only)
+package-lock.json
+yarn.lock
+
+# Deployment/platform state
+.vercel/
 
 # IDEs and editors
-/.idea
+.idea/
 .project
 .classpath
 .c9/
@@ -20,30 +51,21 @@ node_modules
 .settings/
 *.sublime-workspace
 
-# IDE - VSCode
+# VS Code: keep shared workspace config only
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# misc
-/.sass-cache
-/connect.lock
-/coverage
-/libpeerconnection.log
-npm-debug.log
-yarn-error.log
-testem.log
-/typings
-
-# System Files
+# System files
 .DS_Store
 Thumbs.db
 
+# Workspace/tool-specific
+.agents/
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
 # Replit
-.cache/
 .local/

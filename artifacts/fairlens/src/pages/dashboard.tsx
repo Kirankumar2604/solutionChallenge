@@ -6,7 +6,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 
 export default function Dashboard() {
-  const { data: summary, isLoading: isSummaryLoading } = useGetDashboardSummary();
+  const {
+    data: summary,
+    isLoading: isSummaryLoading,
+    isError: isSummaryError,
+    error: summaryError,
+  } = useGetDashboardSummary();
   const { data: predictions, isLoading: isPredictionsLoading } = useListPredictions({ limit: 5 });
   const { data: alerts, isLoading: isAlertsLoading } = useListBiasAlerts({ limit: 5 });
 
@@ -14,7 +19,34 @@ export default function Dashboard() {
     return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading dashboard data...</div>;
   }
 
-  if (!summary) return null;
+  if (isSummaryError) {
+    return (
+      <div className="p-8 text-center text-destructive">
+        Failed to load dashboard summary.
+        {summaryError instanceof Error ? ` ${summaryError.message}` : ""}
+      </div>
+    );
+  }
+
+  const safeSummary = {
+    totalPredictions:
+      typeof summary?.totalPredictions === "number" ? summary.totalPredictions : 0,
+    approvalRate: typeof summary?.approvalRate === "number" ? summary.approvalRate : 0,
+    biasDetectedCount:
+      typeof summary?.biasDetectedCount === "number" ? summary.biasDetectedCount : 0,
+    fairnessImprovement:
+      typeof summary?.fairnessImprovement === "number"
+        ? summary.fairnessImprovement
+        : 0,
+    approvalRateByGender: Array.isArray(summary?.approvalRateByGender)
+      ? summary.approvalRateByGender
+      : [],
+    approvalRateByLocation: Array.isArray(summary?.approvalRateByLocation)
+      ? summary.approvalRateByLocation
+      : [],
+  };
+  const safePredictions = Array.isArray(predictions) ? predictions : [];
+  const safeAlerts = Array.isArray(alerts) ? alerts : [];
 
   return (
     <div className="space-y-6 max-w-[1400px] mx-auto">
@@ -29,7 +61,7 @@ export default function Dashboard() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Predictions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{summary.totalPredictions.toLocaleString()}</div>
+            <div className="text-3xl font-bold">{safeSummary.totalPredictions.toLocaleString()}</div>
           </CardContent>
         </Card>
         <Card>
@@ -37,7 +69,7 @@ export default function Dashboard() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Overall Approval Rate</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{formatPercent(summary.approvalRate)}</div>
+            <div className="text-3xl font-bold">{formatPercent(safeSummary.approvalRate)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -45,7 +77,7 @@ export default function Dashboard() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Bias Detected</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-destructive">{summary.biasDetectedCount.toLocaleString()}</div>
+            <div className="text-3xl font-bold text-destructive">{safeSummary.biasDetectedCount.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground mt-1">Predictions requiring mitigation</p>
           </CardContent>
         </Card>
@@ -54,7 +86,7 @@ export default function Dashboard() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Fairness Improvement</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-primary">+{formatPercent(summary.fairnessImprovement)}</div>
+            <div className="text-3xl font-bold text-primary">+{formatPercent(safeSummary.fairnessImprovement)}</div>
             <p className="text-xs text-muted-foreground mt-1">Average parity gain</p>
           </CardContent>
         </Card>
@@ -68,7 +100,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={summary.approvalRateByGender} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+              <BarChart data={safeSummary.approvalRateByGender} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="group" axisLine={false} tickLine={false} />
                 <YAxis tickFormatter={(val) => `${(val * 100).toFixed(0)}%`} axisLine={false} tickLine={false} />
@@ -88,7 +120,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={summary.approvalRateByLocation} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+              <BarChart data={safeSummary.approvalRateByLocation} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="group" axisLine={false} tickLine={false} />
                 <YAxis tickFormatter={(val) => `${(val * 100).toFixed(0)}%`} axisLine={false} tickLine={false} />
@@ -118,7 +150,7 @@ export default function Dashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {predictions?.map((pred) => (
+                {safePredictions.map((pred) => (
                   <TableRow key={pred.id}>
                     <TableCell>
                       <Badge variant={pred.finalDecision === "Approved" ? "default" : "secondary"}>
@@ -147,7 +179,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {alerts?.map((alert) => (
+              {safeAlerts.map((alert) => (
                 <div key={alert.id} className="flex flex-col gap-1 pb-4 border-b last:border-0 last:pb-0">
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-sm">{alert.message}</span>
@@ -158,7 +190,7 @@ export default function Dashboard() {
                   </span>
                 </div>
               ))}
-              {alerts?.length === 0 && (
+              {safeAlerts.length === 0 && (
                 <div className="text-sm text-muted-foreground">No recent alerts.</div>
               )}
             </div>

@@ -136,6 +136,6 @@ Notes:
 
 ## Development Notes
 
-- OpenAPI source lives in `lib/api-spec/openapi.yaml`.
+- Gemini API source lives in `lib/api-spec/openapi.yaml`.
 - Generated files are consumed through `@workspace/api-client-react` and `@workspace/api-zod`.
 - Keep API contracts updated by rerunning codegen when endpoint schemas change.

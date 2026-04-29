@@ -6,11 +6,16 @@
   "scripts": {
     "hello": "tsx ./src/hello.ts",
     "seed": "tsx ./src/seed.ts",
+    "import-db-csv": "tsx ./src/import-db-csv.ts",
+    "import-csv": "tsx ./src/import-csv.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "@workspace/db": "workspace:*",
     "tsx": "catalog:"
+  },
+  "dependencies": {
+    "csv-parse": "^6.2.1"
   }
 }

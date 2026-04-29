@@ -39,7 +39,7 @@ libpeerconnection.log
 package-lock.json
 yarn.lock
 
-# Deployment/platform state
+# Deployment state
 .vercel/
 
 # IDEs and editors
@@ -64,8 +64,3 @@ Thumbs.db
 
 # Workspace/tool-specific
 .agents/
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
-
-# Replit
-.local/

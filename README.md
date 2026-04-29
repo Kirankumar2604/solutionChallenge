@@ -20,7 +20,7 @@ It scores applicant-like inputs (loan, hiring, healthcare-style scenarios), dete
 - Express 5 (API)
 - PostgreSQL + Drizzle ORM
 - React + Vite + Tailwind + shadcn/ui (frontend)
-- Orval (OpenAPI -> typed client + Zod models)
+- Orval (Gemini API -> typed client + Zod models)
 
 ## Core Features
 

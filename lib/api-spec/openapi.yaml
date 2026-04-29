@@ -1,0 +1,650 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: FairLens — real-time AI bias detection, mitigation, and explainability API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: predictions
+    description: Loan / hiring decision predictions with fairness analysis
+  - name: fairness
+    description: Group fairness metrics, monitoring and dashboards
+  - name: settings
+    description: System / fairness configuration
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /predictions:
+    get:
+      operationId: listPredictions
+      tags: [predictions]
+      summary: List recent predictions (logs)
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - in: query
+          name: group
+          description: Filter by protected group label (e.g. Female, Male)
+          schema:
+            type: string
+        - in: query
+          name: biasOnly
+          description: Only return predictions where bias was detected
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: List of predictions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PredictionRecord"
+    post:
+      operationId: createPrediction
+      tags: [predictions]
+      summary: Submit a new applicant for prediction with bias check & mitigation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PredictionInput"
+      responses:
+        "200":
+          description: Prediction with fairness analysis and mitigation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PredictionResult"
+
+  /predictions/{id}:
+    get:
+      operationId: getPrediction
+      tags: [predictions]
+      summary: Get a single prediction with full explanation
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Prediction record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PredictionRecord"
+
+  /predictions/batch:
+    post:
+      operationId: runBatchPrediction
+      tags: [predictions]
+      summary: Run a batch of synthetic applicants through the model and persist them
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchPredictionInput"
+      responses:
+        "200":
+          description: Batch summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchPredictionSummary"
+
+  /fairness/dashboard:
+    get:
+      operationId: getDashboardSummary
+      tags: [fairness]
+      summary: Aggregate dashboard summary across all stored predictions
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /fairness/metrics:
+    get:
+      operationId: getFairnessMetrics
+      tags: [fairness]
+      summary: Compute current fairness metrics across all predictions (before vs after mitigation)
+      parameters:
+        - in: query
+          name: attribute
+          description: Protected attribute to group by
+          schema:
+            type: string
+            enum: [gender, location, education]
+            default: gender
+      responses:
+        "200":
+          description: Fairness metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FairnessReport"
+
+  /fairness/group-outcomes:
+    get:
+      operationId: getGroupOutcomes
+      tags: [fairness]
+      summary: Approval rates by protected group, before and after mitigation
+      parameters:
+        - in: query
+          name: attribute
+          schema:
+            type: string
+            enum: [gender, location, education]
+            default: gender
+      responses:
+        "200":
+          description: Group outcomes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupOutcomesReport"
+
+  /fairness/alerts:
+    get:
+      operationId: listBiasAlerts
+      tags: [fairness]
+      summary: Recent bias alerts raised by the monitor
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: List of alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BiasAlert"
+
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get current fairness/system settings
+      responses:
+        "200":
+          description: Settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+    put:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update fairness/system settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsInput"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settings"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    PredictionInput:
+      type: object
+      required:
+        - age
+        - gender
+        - maritalStatus
+        - education
+        - location
+        - workExperience
+        - income
+        - loanAmount
+        - creditHistory
+      properties:
+        age:
+          type: integer
+          minimum: 18
+          maximum: 100
+        gender:
+          type: string
+          enum: [Male, Female, Other]
+        maritalStatus:
+          type: string
+          enum: [Single, Married, Divorced, Widowed]
+        education:
+          type: string
+          enum: [High School, Bachelors, Masters, PhD]
+        location:
+          type: string
+          enum: [Urban, Suburban, Rural]
+        workExperience:
+          type: integer
+          minimum: 0
+          maximum: 60
+        income:
+          type: number
+          minimum: 0
+        loanAmount:
+          type: number
+          minimum: 0
+        creditHistory:
+          type: string
+          enum: [Excellent, Good, Fair, Poor]
+        modelName:
+          type: string
+          description: Optional model identifier (defaults to LoanModel_v1.3)
+
+    Factor:
+      type: object
+      required: [label, weight, direction]
+      properties:
+        label:
+          type: string
+        weight:
+          type: number
+          description: Magnitude of contribution (0-1)
+        direction:
+          type: string
+          enum: [positive, negative]
+
+    PredictionResult:
+      type: object
+      required:
+        - id
+        - finalDecision
+        - rawDecision
+        - confidence
+        - rawScore
+        - mitigatedScore
+        - biasDetected
+        - severity
+        - mitigationApplied
+        - factors
+        - explanation
+        - processingTimeMs
+        - modelName
+        - input
+        - createdAt
+      properties:
+        id:
+          type: integer
+        finalDecision:
+          type: string
+          enum: [Approved, Rejected]
+        rawDecision:
+          type: string
+          enum: [Approved, Rejected]
+        confidence:
+          type: number
+          description: Confidence score for the final decision (0-1)
+        rawScore:
+          type: number
+          description: Raw model probability before mitigation
+        mitigatedScore:
+          type: number
+          description: Score after mitigation
+        biasDetected:
+          type: boolean
+        severity:
+          type: string
+          enum: [None, Low, Medium, High]
+        mitigationApplied:
+          type: boolean
+        factors:
+          type: array
+          items:
+            $ref: "#/components/schemas/Factor"
+        explanation:
+          type: string
+        processingTimeMs:
+          type: integer
+        modelName:
+          type: string
+        input:
+          $ref: "#/components/schemas/PredictionInput"
+        createdAt:
+          type: string
+          format: date-time
+
+    PredictionRecord:
+      allOf:
+        - $ref: "#/components/schemas/PredictionResult"
+
+    BatchPredictionInput:
+      type: object
+      required: [count, scenario]
+      properties:
+        count:
+          type: integer
+          minimum: 1
+          maximum: 200
+        scenario:
+          type: string
+          enum: [LoanApprovals, HiringDecisions, HealthcareTriage]
+
+    BatchPredictionSummary:
+      type: object
+      required:
+        - totalProcessed
+        - approvedCount
+        - rejectedCount
+        - biasDetectedCount
+        - mitigationsApplied
+        - scenario
+        - groupBreakdown
+      properties:
+        totalProcessed:
+          type: integer
+        approvedCount:
+          type: integer
+        rejectedCount:
+          type: integer
+        biasDetectedCount:
+          type: integer
+        mitigationsApplied:
+          type: integer
+        scenario:
+          type: string
+        groupBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/GroupOutcome"
+
+    GroupOutcome:
+      type: object
+      required:
+        - group
+        - total
+        - approvedBefore
+        - approvedAfter
+        - approvalRateBefore
+        - approvalRateAfter
+      properties:
+        group:
+          type: string
+        total:
+          type: integer
+        approvedBefore:
+          type: integer
+        approvedAfter:
+          type: integer
+        approvalRateBefore:
+          type: number
+        approvalRateAfter:
+          type: number
+
+    GroupOutcomesReport:
+      type: object
+      required: [attribute, overallApprovalRate, groups]
+      properties:
+        attribute:
+          type: string
+        overallApprovalRate:
+          type: number
+        groups:
+          type: array
+          items:
+            $ref: "#/components/schemas/GroupOutcome"
+
+    FairnessMetric:
+      type: object
+      required: [name, before, after, ideal, status, threshold]
+      properties:
+        name:
+          type: string
+          enum:
+            - Demographic Parity
+            - Equal Opportunity
+            - Disparate Impact
+            - Statistical Parity Difference
+        before:
+          type: number
+        after:
+          type: number
+        ideal:
+          type: number
+        threshold:
+          type: number
+          description: Acceptable threshold for this metric
+        status:
+          type: string
+          enum: [Fair, Acceptable, Biased]
+
+    FairnessReport:
+      type: object
+      required:
+        - attribute
+        - sampleSize
+        - metrics
+        - biasDetectedBefore
+        - biasDetectedAfter
+        - severityBefore
+        - severityAfter
+        - accuracyChange
+        - fairnessImprovement
+        - decisionsChanged
+      properties:
+        attribute:
+          type: string
+        sampleSize:
+          type: integer
+        metrics:
+          type: array
+          items:
+            $ref: "#/components/schemas/FairnessMetric"
+        biasDetectedBefore:
+          type: boolean
+        biasDetectedAfter:
+          type: boolean
+        severityBefore:
+          type: string
+          enum: [None, Low, Medium, High]
+        severityAfter:
+          type: string
+          enum: [None, Low, Medium, High]
+        accuracyChange:
+          type: number
+          description: Estimated change in accuracy from mitigation (e.g. -0.021)
+        fairnessImprovement:
+          type: number
+          description: Aggregate fairness improvement (e.g. 0.346)
+        decisionsChanged:
+          type: number
+          description: Fraction of decisions changed by mitigation (0-1)
+
+    BiasAlert:
+      type: object
+      required: [id, message, attribute, group, severity, createdAt, threshold, value, metric]
+      properties:
+        id:
+          type: integer
+        message:
+          type: string
+        attribute:
+          type: string
+        group:
+          type: string
+        metric:
+          type: string
+        value:
+          type: number
+        threshold:
+          type: number
+        severity:
+          type: string
+          enum: [Low, Medium, High]
+        createdAt:
+          type: string
+          format: date-time
+
+    DashboardSummary:
+      type: object
+      required:
+        - totalPredictions
+        - approvedCount
+        - rejectedCount
+        - biasDetectedCount
+        - averageConfidence
+        - approvalRate
+        - mitigationsApplied
+        - fairnessImprovement
+        - recentPredictions
+        - recentAlerts
+        - approvalRateByGender
+        - approvalRateByLocation
+        - dailyVolume
+      properties:
+        totalPredictions:
+          type: integer
+        approvedCount:
+          type: integer
+        rejectedCount:
+          type: integer
+        biasDetectedCount:
+          type: integer
+        averageConfidence:
+          type: number
+        approvalRate:
+          type: number
+        mitigationsApplied:
+          type: integer
+        fairnessImprovement:
+          type: number
+        recentPredictions:
+          type: array
+          items:
+            $ref: "#/components/schemas/PredictionRecord"
+        recentAlerts:
+          type: array
+          items:
+            $ref: "#/components/schemas/BiasAlert"
+        approvalRateByGender:
+          type: array
+          items:
+            $ref: "#/components/schemas/GroupOutcome"
+        approvalRateByLocation:
+          type: array
+          items:
+            $ref: "#/components/schemas/GroupOutcome"
+        dailyVolume:
+          type: array
+          items:
+            type: object
+            required: [date, total, approved, rejected]
+            properties:
+              date:
+                type: string
+              total:
+                type: integer
+              approved:
+                type: integer
+              rejected:
+                type: integer
+
+    Settings:
+      type: object
+      required:
+        - id
+        - fairnessMode
+        - approvalThreshold
+        - demographicParityThreshold
+        - disparateImpactThreshold
+        - mitigationStrategy
+        - protectedAttributes
+        - modelName
+        - updatedAt
+      properties:
+        id:
+          type: integer
+        fairnessMode:
+          type: boolean
+        approvalThreshold:
+          type: number
+          minimum: 0
+          maximum: 1
+        demographicParityThreshold:
+          type: number
+        disparateImpactThreshold:
+          type: number
+        mitigationStrategy:
+          type: string
+          enum: [ThresholdTuning, Reweighting, GroupCalibration]
+        protectedAttributes:
+          type: array
+          items:
+            type: string
+        modelName:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+
+    SettingsInput:
+      type: object
+      properties:
+        fairnessMode:
+          type: boolean
+        approvalThreshold:
+          type: number
+          minimum: 0
+          maximum: 1
+        demographicParityThreshold:
+          type: number
+        disparateImpactThreshold:
+          type: number
+        mitigationStrategy:
+          type: string
+          enum: [ThresholdTuning, Reweighting, GroupCalibration]
+        protectedAttributes:
+          type: array
+          items:
+            type: string
+        modelName:
+          type: string

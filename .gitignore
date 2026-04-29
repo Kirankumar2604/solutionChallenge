@@ -1,9 +1,12 @@
 # Dependencies
 node_modules/
+**/node_modules/
 
 # Build outputs
 dist/
+**/dist/
 build/
+**/build/
 out/
 out-tsc/
 tmp/
@@ -27,6 +30,9 @@ libpeerconnection.log
 .env
 .env.*
 !.env.example
+.env.local
+.env.test
+.env
 
 # Tooling caches
 .cache/

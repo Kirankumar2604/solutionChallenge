@@ -64,3 +64,4 @@ Thumbs.db
 
 # Workspace/tool-specific
 .agents/
+.replit

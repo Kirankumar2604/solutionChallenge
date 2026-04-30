@@ -11,6 +11,21 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Runtime API URL: Vercel can inject this script or you can set it
+         directly in the HTML via CI/deployment. The app will prefer
+         `import.meta.env.VITE_API_URL` (build-time) but will fall back to
+         `window.__API_URL` at runtime if present. -->
+    <meta name="api-url" content="">
+    <script>
+      (function () {
+        if (typeof window !== 'undefined' && window.__API_URL == null) {
+          var meta = document.querySelector('meta[name="api-url"]');
+          if (meta && meta.content) {
+            window.__API_URL = meta.content;
+          }
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

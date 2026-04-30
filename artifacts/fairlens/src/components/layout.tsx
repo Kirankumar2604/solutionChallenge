@@ -9,13 +9,13 @@ function AppSidebar() {
   const [location] = useLocation();
 
   const navItems = [
-    { label: "Dashboard", href: "/", icon: LayoutDashboard },
-    { label: "New Prediction", href: "/new-prediction", icon: PlusCircle },
-    { label: "Batch Prediction", href: "/batch-prediction", icon: BarChart3 },
-    { label: "Bias Monitor", href: "/bias-monitor", icon: Activity },
-    { label: "Explainability", href: "/explainability", icon: FileText },
-    { label: "Logs", href: "/logs", icon: FileText },
-    { label: "Settings", href: "/settings", icon: SettingsIcon },
+    { label: "Dashboard", href: "/app", icon: LayoutDashboard },
+    { label: "New Prediction", href: "/app/new-prediction", icon: PlusCircle },
+    { label: "Batch Prediction", href: "/app/batch-prediction", icon: BarChart3 },
+    { label: "Bias Monitor", href: "/app/bias-monitor", icon: Activity },
+    { label: "Explainability", href: "/app/explainability", icon: FileText },
+    { label: "Logs", href: "/app/logs", icon: FileText },
+    { label: "Settings", href: "/app/settings", icon: SettingsIcon },
   ];
 
   return (

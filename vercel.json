@@ -1,6 +1,0 @@
-{
-  "framework": "vite",
-  "installCommand": "pnpm install",
-  "buildCommand": "pnpm --filter @workspace/fairlens run build",
-  "outputDirectory": "artifacts/fairlens/dist"
-}
